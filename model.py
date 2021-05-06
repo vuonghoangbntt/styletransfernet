@@ -1,4 +1,3 @@
-import pickle as pkl
 import os
 import torch
 from PIL import Image, ImageFile
@@ -9,18 +8,6 @@ import torch.nn.functional as f
 import torchvision.transforms as transforms
 from torchvision.utils import save_image
 import numpy as np
-from uuid import uuid4
-
-
-def load_tensors(file):
-    _, f_type = os.path.splitext(file)
-    if f_type == '.pkl':
-        with open(file, "rb") as fout:
-            tensor1 = pkl.load(fout)
-    else:
-        tensor1 = torch.load(file, map_location=torch.device('cpu'))
-    return tensor1
-#u == tensor_pkl
 
 
 mse_criteration = nn.MSELoss()
