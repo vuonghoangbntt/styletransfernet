@@ -331,8 +331,3 @@ def test(input_image, style_image, mode):
     result_file = uuid4().__str__()[:8]+'-1.jpg'
     save_image(out_tensor, result_file)
     return result_file
-
-
-content_image = Image.open('Hoang 1.jpg')
-style_image = Image.open('nez.jpg')
-test(content_image, style_image, 2)
