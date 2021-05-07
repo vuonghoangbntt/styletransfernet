@@ -298,3 +298,8 @@ def test(input_image, style_image):
         result_file = uuid4().__str__()[:8]+'-1.jpg'
         save_image(out_tensor, result_file)
         return result_file
+
+
+#content_image = Image.open('hoithao.png')
+#style_image = Image.open('Untitled1.png')
+#test(content_image, style_image)
