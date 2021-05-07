@@ -274,7 +274,8 @@ class StyleTransferNet(nn.Module):
 
 def test(input_image, style_image):
     output_format = 'jpg'
-
+    input_image = input_image.convert('RGB')
+    style_image = style_image.convert('RGB')
     with torch.no_grad():
         vgg_model = torch.load('vgg_normalized.pth')
         net = StyleTransferNet(vgg_model)

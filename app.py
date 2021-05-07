@@ -4,7 +4,6 @@ from PIL import Image, ImageOps
 from model import test
 import torchvision
 import torch
-
 st.write("""
     # Style Transfer Image
 """)
@@ -27,7 +26,7 @@ else:
         file_z = Image.open(file_name)
         #output_file = torchvision.transforms.ToPILImage()(output_tensor)
         list_image = [content_image, style_image, file_z]
-        st.image(list_image, width=300)
+        st.image(list_image, width=400)
         os.remove(file_name)
     except:
         st.text('Unknown error happened')
