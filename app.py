@@ -15,7 +15,8 @@ style_file = st.file_uploader(
 
 if style_file is None or content_file is None:
     st.text("You need to upload both style and content image")
-else:
+# else:
+if st.button('Submit'):
     content_image = Image.open(content_file)
     style_image = Image.open(style_file)
     try:
