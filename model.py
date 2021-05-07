@@ -8,7 +8,7 @@ import torch.nn.functional as f
 import torchvision.transforms as transforms
 from torchvision.utils import save_image
 import numpy as np
-
+from uuid import uuid4
 
 mse_criteration = nn.MSELoss()
 
@@ -295,6 +295,6 @@ def test(input_image, style_image):
             input_tensor = input_tensor.cuda()
             style_tensor = style_tensor.cuda()
         out_tensor = net([input_tensor, style_tensor], alpha=1.0)
-        #result_file = uuid4().__str__()[:8]+'-1.jpg'
-        #save_image(out_tensor, './static/results/'+result_file)
-        return out_tensor
+        result_file = uuid4().__str__()[:8]+'-1.jpg'
+        save_image(out_tensor, result_file)
+        return result_file

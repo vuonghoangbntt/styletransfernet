@@ -21,9 +21,9 @@ else:
     try:
         st.image(content_image)
         st.image(style_image)
-        output_tensor = test(
-            content_image, style_image).permute(1, 2, 0).numpy()
-        output_file = torchvision.transforms.ToPILImage()(output_tensor)
-        st.image(output_file)
+        file_name = test(
+            content_image, style_image)
+        #output_file = torchvision.transforms.ToPILImage()(output_tensor)
+        st.image(file_name)
     except:
         st.text('Unknown error happened')
