@@ -126,6 +126,9 @@ class AdaIN(nn.Module):
         return out
 
 
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+
 class StyleTransferNet(nn.Module):
     def __init__(self, vgg_model, skip_connect=None):
         super().__init__()
@@ -174,7 +177,7 @@ class StyleTransferNet(nn.Module):
         # Load weight for encoder
         self.encoder.load_state_dict(vggnet[:21].state_dict())
         for parameter in self.encoder.parameters():
-            parameter.requires_grad = False
+            parameter.requires_grad = True
         self.decoder = nn.Sequential(
             nn.Conv2d(512, 256, kernel_size=(3, 3), stride=(
                 1, 1), padding=(1, 1), padding_mode='reflect'),
@@ -209,6 +212,11 @@ class StyleTransferNet(nn.Module):
             nn.Conv2d(64, 3, kernel_size=(3, 3), stride=(1, 1),
                       padding=(1, 1), padding_mode='reflect'),
         )
+        self.skip_weight1 = nn.Parameter(
+            torch.randn(1, 1, 256, 256)).to(device)
+        self.skip_weight2 = nn.Parameter(
+            torch.randn(1, 1, 128, 128)).to(device)
+        self.skip_weight3 = nn.Parameter(torch.randn(1, 1, 64, 64)).to(device)
         self.adaIN = AdaIN()
         self.mse_criteration = nn.MSELoss()
         self.skip_connect = skip_connect
@@ -229,19 +237,28 @@ class StyleTransferNet(nn.Module):
             skip2 = self.encoder[5:10](skip1)
             skip3 = self.encoder[10:19](skip2)
         elif self.skip_connect == 'normalized_content':
-            skip1 = self.adaIN(self.encoder[:5](
-                content_img), self.encoder[:5](style_img))
-            skip2 = self.adaIN(self.encoder[5:10](
-                content_img), self.encoder[5:10](style_img))
-            skip3 = self.adaIN(self.encoder[10:19](
-                content_img), self.encoder[10:19](style_img))
+            encoding_content = self.encoder[:5](content_img)
+            encoding_style = self.encoder[:5](style_img)
+            skip1 = self.adaIN(encoding_content, encoding_style)
+
+            encoding_content = self.encoder[5:10](encoding_content)
+            encoding_style = self.encoder[5:10](encoding_style)
+            skip2 = self.adaIN(encoding_content, encoding_style)
+
+            encoding_content = self.encoder[10:19](encoding_content)
+            encoding_style = self.encoder[10:19](encoding_style)
+            skip3 = self.adaIN(encoding_content, encoding_style)
 
         if self.skip_connect is None:
             gen_img = self.decoder(encode_out)
         else:
-            gen_img = self.decoder[:3](encode_out) + skip3
-            gen_img = self.decoder[3:12](gen_img) + skip2
-            gen_img = self.decoder[12:17](gen_img) + skip1
+            # self.skip_weight1 = nn.Parameter(torch.randn(skip1.shape[1:-1]).unsqueeze(2).unsqueeze(0)).to(device)
+            # self.skip_weight2 = nn.Parameter(torch.randn(skip2.shape[1:-1]).unsqueeze(2).unsqueeze(0)).to(device)
+            # self.skip_weight3 = nn.Parameter(torch.randn(skip3.shape[1:-1]).unsqueeze(2).unsqueeze(0)).to(device)
+            # print(self.skip_weight1.shape)
+            gen_img = self.decoder[:3](encode_out) + skip3*self.skip_weight3
+            gen_img = self.decoder[3:12](gen_img) + skip2*self.skip_weight2
+            gen_img = self.decoder[12:17](gen_img) + skip1*self.skip_weight1
             gen_img = self.decoder[17:](gen_img)
 
         if self.training:
@@ -272,35 +289,50 @@ class StyleTransferNet(nn.Module):
         return gen_img
 
 
-def test(input_image, style_image):
+def test(input_image, style_image, mode):
     output_format = 'jpg'
     input_image = input_image.convert('RGB')
     style_image = style_image.convert('RGB')
-    with torch.no_grad():
-        vgg_model = torch.load('vgg_normalized.pth')
-        net = StyleTransferNet(vgg_model)
-        net.decoder.load_state_dict(torch.load(
-            'check_point_epoch_35_10000_samples_v2.pth', map_location=torch.device('cpu'))['net'])
-        #net = StyleTransferNet(vgg_model, skip_connect='content')
-        # net.decoder.load_state_dict(torch.load('./tensors/check_point_epoch_29_10000_samples.pth')['net'])
-        # net.decoder.load_state_dict(torch.load('decoder.pth'))
-        net.eval()
-        input_image = transforms.Resize(512)(input_image)
-        style_image = transforms.Resize(512)(style_image)
+    if mode == 1:
+        with torch.no_grad():
+            vgg_model = torch.load('vgg_normalized.pth')
+            net = StyleTransferNet(vgg_model)
+            net.decoder.load_state_dict(torch.load(
+                'check_point_epoch_35_10000_samples_v2.pth', map_location=torch.device('cpu'))['net'])
+            #net = StyleTransferNet(vgg_model, skip_connect='content')
+            # net.decoder.load_state_dict(torch.load('./tensors/check_point_epoch_29_10000_samples.pth')['net'])
+            # net.decoder.load_state_dict(torch.load('decoder.pth'))
+            net.eval()
+            input_image = transforms.Resize(512)(input_image)
+            style_image = transforms.Resize(512)(style_image)
 
-        input_tensor = transforms.ToTensor()(input_image).unsqueeze(0)
-        style_tensor = transforms.ToTensor()(style_image).unsqueeze(0)
+            input_tensor = transforms.ToTensor()(input_image).unsqueeze(0)
+            style_tensor = transforms.ToTensor()(style_image).unsqueeze(0)
 
-        if torch.cuda.is_available():
-            net.cuda()
-            input_tensor = input_tensor.cuda()
-            style_tensor = style_tensor.cuda()
+            if torch.cuda.is_available():
+                net.cuda()
+                input_tensor = input_tensor.cuda()
+                style_tensor = style_tensor.cuda()
+            out_tensor = net([input_tensor, style_tensor], alpha=1.0)
+    else:
+        with torch.no_grad():
+            vgg_model = torch.load('vgg_normalized.pth')
+            net = StyleTransferNet(
+                vgg_model, skip_connect='normalized_content')
+            net.decoder.load_state_dict(torch.load(
+                'check_point_epoch_35_normalized_content_weighted_skip.pth', map_location=torch.device('cpu'))['net'])
+            # net.decoder.load_state_dict(torch.load('decoder.pth'))
+            net.eval()
+            input_image = transforms.Resize((256, 256))(input_image)
+            style_image = transforms.Resize((256, 256))(style_image)
+            input_tensor = transforms.ToTensor()(input_image).unsqueeze(0)
+            style_tensor = transforms.ToTensor()(style_image).unsqueeze(0)
         out_tensor = net([input_tensor, style_tensor], alpha=1.0)
-        result_file = uuid4().__str__()[:8]+'-1.jpg'
-        save_image(out_tensor, result_file)
-        return result_file
+    result_file = uuid4().__str__()[:8]+'-1.jpg'
+    save_image(out_tensor, result_file)
+    return result_file
 
 
-#content_image = Image.open('hoithao.png')
-#style_image = Image.open('Untitled1.png')
-#test(content_image, style_image)
+content_image = Image.open('Hoang 1.jpg')
+style_image = Image.open('nez.jpg')
+test(content_image, style_image, 2)
