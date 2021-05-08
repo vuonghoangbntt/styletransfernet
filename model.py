@@ -314,7 +314,7 @@ def test(input_image, style_image, mode):
                 input_tensor = input_tensor.cuda()
                 style_tensor = style_tensor.cuda()
             out_tensor = net([input_tensor, style_tensor], alpha=1.0)
-    else:
+    elif mode==2:
         with torch.no_grad():
             vgg_model = torch.load('vgg_normalized.pth')
             net = StyleTransferNet(
@@ -328,6 +328,27 @@ def test(input_image, style_image, mode):
             input_tensor = transforms.ToTensor()(input_image).unsqueeze(0)
             style_tensor = transforms.ToTensor()(style_image).unsqueeze(0)
         out_tensor = net([input_tensor, style_tensor], alpha=1.0)
+    else:
+        with torch.no_grad():
+            vgg_model = torch.load('vgg_normalized.pth')
+            net = StyleTransferNet(vgg_model)
+            #net.decoder.load_state_dict(torch.load(
+            #    'check_point_epoch_35_10000_samples_v2.pth', map_location=torch.device('cpu'))['net'])
+            #net = StyleTransferNet(vgg_model, skip_connect='content')
+            # net.decoder.load_state_dict(torch.load('./tensors/check_point_epoch_29_10000_samples.pth')['net'])
+            net.decoder.load_state_dict(torch.load('decoder.pth'))
+            net.eval()
+            input_image = transforms.Resize(512)(input_image)
+            style_image = transforms.Resize(512)(style_image)
+
+            input_tensor = transforms.ToTensor()(input_image).unsqueeze(0)
+            style_tensor = transforms.ToTensor()(style_image).unsqueeze(0)
+
+            if torch.cuda.is_available():
+                net.cuda()
+                input_tensor = input_tensor.cuda()
+                style_tensor = style_tensor.cuda()
+            out_tensor = net([input_tensor, style_tensor], alpha=1.0)
     result_file = uuid4().__str__()[:8]+'-1.jpg'
     save_image(out_tensor, result_file)
     return result_file

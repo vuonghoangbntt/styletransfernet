@@ -14,7 +14,7 @@ style_file = st.file_uploader(
     "Please upload style image file", type=["jpg", "jpeg", "png"])
 option = st.selectbox(
     'What model do you like?',
-    ('Hiep Model', 'Hoang Model'))
+    ('Hoang Model', 'Hiep Model', 'Optimize model'))
 if style_file is None or content_file is None:
     st.text("You need to upload both style and content image")
 # else:
@@ -23,8 +23,10 @@ if st.button('Submit'):
     style_image = Image.open(style_file)
     if option == 'Hiep Model':
         mode = 2
-    else:
+    elif option == 'Hoang Model':
         mode = 1
+    else:
+        mode = 3
     try:
         #st.image(content_image, width=200)
         #st.image(style_image, width=200)
