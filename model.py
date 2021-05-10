@@ -314,7 +314,7 @@ def test(input_image, style_image, mode):
                 input_tensor = input_tensor.cuda()
                 style_tensor = style_tensor.cuda()
             out_tensor = net([input_tensor, style_tensor], alpha=1.0)
-    elif mode==2:
+    elif mode == 2:
         with torch.no_grad():
             vgg_model = torch.load('vgg_normalized.pth')
             net = StyleTransferNet(
@@ -332,7 +332,7 @@ def test(input_image, style_image, mode):
         with torch.no_grad():
             vgg_model = torch.load('vgg_normalized.pth')
             net = StyleTransferNet(vgg_model)
-            #net.decoder.load_state_dict(torch.load(
+            # net.decoder.load_state_dict(torch.load(
             #    'check_point_epoch_35_10000_samples_v2.pth', map_location=torch.device('cpu'))['net'])
             #net = StyleTransferNet(vgg_model, skip_connect='content')
             # net.decoder.load_state_dict(torch.load('./tensors/check_point_epoch_29_10000_samples.pth')['net'])
