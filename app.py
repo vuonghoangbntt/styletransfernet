@@ -4,10 +4,10 @@ from PIL import Image, ImageOps
 from model import test
 import torchvision
 import torch
-st.sidebar.write("""
+st.sidebar.title("""
     # Style Transfer Image
 """)
-st.sidebar.write("This is a simple style transfer app")
+st.sidebar.subheader("This is a simple style transfer app")
 st.sidebar.subheader('Alpha')
 alpha = st.sidebar.slider('A number between 0.5-1',
                           min_value=0.5, max_value=1.0, step=0.01, value=1.0)
