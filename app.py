@@ -10,7 +10,7 @@ st.sidebar.title("""
 st.sidebar.subheader("This is a simple style transfer app")
 st.sidebar.subheader('Alpha')
 alpha = st.sidebar.slider('A number between 0.5-1',
-                          min_value=0, max_value=1.0, step=0.01, value=1.0)
+                          min_value=0.0, max_value=1.0, step=0.01, value=1.0)
 content_file = st.sidebar.file_uploader(
     "Please upload content image file", type=["jpg", "jpeg", "png"])
 style_file = st.sidebar.file_uploader(
